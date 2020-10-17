@@ -1,5 +1,6 @@
 # MIDITaikoBoard
 A simple MIDI-based Taiko controller for osu! in combination with MIDI to keyboard converter app
+
 **Warning**: This app still suffers multi-touch delay
 
 ## Requirements
