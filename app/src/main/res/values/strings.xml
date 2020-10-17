@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MIDI Taiko Board</string>
+    <string name="plus">+</string>
+    <string name="choose_port">Choose Port</string>
+    <string name="change_color">Change Color</string>
+    <string name="set_fullscreen">Fullscreen</string>
+</resources>
