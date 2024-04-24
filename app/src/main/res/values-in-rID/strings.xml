@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">MIDI Taiko Board</string>
+    <string name="plus">+</string>
+    <string name="choose_port">Pilih Port</string>
+    <string name="change_color">Ganti Warna</string>
+    <string name="set_fullscreen">Layar Penuh</string>
+    <string name="title_bar_device_name_field">Perangkat : %1$s</string>
+    <string name="device_none">TIDAK ADA</string>
+    <string name="toast_midi_device_found_total">%1$d perangkat MIDI ditemukan.</string>
+    <string name="midi_device_unknown_name">Perangkat MIDI</string>
+    <string name="midi_device_unknown_manufacturer">Merek MIDI</string>
+    <string name="toast_device_change_info">%1$s sudah dibuka.</string>
+    <string name="title_set_midi_device">Pilih Perangkat MIDI.</string>
+    <string name="title_set_midi_device_port">Pilih Port Keluaran MIDI.</string>
+    <string name="alert_no_midi_device_active">Tidak ada perangkat MIDI yang sedang aktif. Silahkan pilih perangkat MIDI dengan menyentuh ikon USB.</string>
+    <string name="toast_entering_fullscreen">Tekan/lakukan gestur kembali untuk kembali ke tampilan normal.</string>
+    <string name="toast_device_connected">Perangkat MIDI baru tersambung</string>
+    <string name="toast_device_disconnected">Perangkat MIDI terputus</string>
+</resources>
