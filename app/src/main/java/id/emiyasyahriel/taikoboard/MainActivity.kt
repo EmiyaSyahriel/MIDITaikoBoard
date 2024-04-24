@@ -1,23 +1,23 @@
 package id.emiyasyahriel.taikoboard
 
-import android.app.Dialog
+import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.midi.*
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.Window
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.core.app.DialogCompat
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.timerTask
 
-class MainActivity : AppCompatActivity(), ITaikoViewReceiver {
+class MainActivity : Activity() {
     lateinit var midiManager : MidiManager
     var devices = ArrayList<MidiDeviceInfo>()
     var selectedDeviceIdx = -1
@@ -25,19 +25,43 @@ class MainActivity : AppCompatActivity(), ITaikoViewReceiver {
     var activePort: MidiInputPort? = null
     var isFullScreen = false
     lateinit var taiko : TaikoView
+    private var timer = Timer("MIDI Queue")
+
+    private data class Queue(val pos:Int, val up:Boolean)
+    private val queue = arrayListOf<Queue>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         taiko = TaikoView(this)
-        taiko.addEventListener(this)
         setContentView(taiko)
-        supportActionBar?.subtitle = "Device : NONE"
+        actionBar?.subtitle = "Device : NONE"
 
         if(!packageManager.hasSystemFeature(PackageManager.FEATURE_MIDI)) displayUnsupportedAlert()
 
         midiManager = getSystemService(Context.MIDI_SERVICE) as MidiManager
         midiManager.registerDeviceCallback( MidiCallbacks(this), Handler() )
         addConnectedDevices()
+
+        timer.scheduleAtFixedRate( timerTask {
+            synchronized(queue){
+                if(queue.size <= 0) return@timerTask
+                val buffer = ByteArray(3 * queue.size)
+                var numBytes = 0
+                for(q in queue){
+                    if(activePort != null){
+                        val flag = if(q.up) 0x80 else 0x90
+                        buffer[numBytes++] = (flag).toByte()
+                        buffer[numBytes++] = (50 + q.pos).toByte()
+                        buffer[numBytes++] = (127).toByte()
+                    }
+                }
+                // 5ms timestamp
+                val nPms = 1000000L
+                val timeStamp = System.nanoTime() + (5 * nPms)
+                activePort?.send(buffer, 0, numBytes, timeStamp)
+                queue.clear()
+            }
+        }, 0, 5)
     }
 
     private fun addConnectedDevices(){
@@ -102,7 +126,7 @@ class MainActivity : AppCompatActivity(), ITaikoViewReceiver {
         activeDevice = md
         val midiName = md.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME, "Unknown MIDI Device")
         val midiManufacture = md.info.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER, "Unknown MIDI Manufacturer")
-        supportActionBar?.subtitle = "Device : $midiName - $midiManufacture"
+        actionBar?.subtitle = "Device : $midiName - $midiManufacture"
         Toast.makeText(this, "$midiName has opened.", Toast.LENGTH_SHORT).show()
     }
 
@@ -180,31 +204,15 @@ class MainActivity : AppCompatActivity(), ITaikoViewReceiver {
         }
     }
 
-    override fun onDown(pos: Int) {
-        if(activePort != null){
-            val buffer = ByteArray(3)
-            var numBytes = 0;
-            buffer[numBytes++] = (0x90).toByte()
-            buffer[numBytes++] = (50 + pos).toByte()
-            buffer[numBytes++] = (127).toByte()
-            // 5ms timestamp
-            val nPms = 1000000L;
-            val timeStamp = System.nanoTime() + (5 * nPms)
-            activePort?.send(buffer, 0, numBytes, timeStamp)
+    fun onDown(pos: Int) {
+        synchronized(queue){
+            queue.add(Queue(pos, false))
         }
     }
 
-    override fun onUp(pos: Int) {
-        if(activePort != null){
-            val buffer = ByteArray(3)
-            var numBytes = 0;
-            buffer[numBytes++] = (0x80).toByte()
-            buffer[numBytes++] = (50 + pos).toByte()
-            buffer[numBytes++] = (127).toByte()
-            // 5ms timestamp
-            val nPms = 1000000L;
-            val timeStamp = System.nanoTime() + (5 * nPms)
-            activePort?.send(buffer, 0, numBytes, timeStamp)
+    fun onUp(pos: Int) {
+        synchronized(queue){
+            queue.add(Queue(pos, true))
         }
     }
 }

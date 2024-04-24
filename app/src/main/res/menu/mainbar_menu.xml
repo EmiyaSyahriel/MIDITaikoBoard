@@ -5,24 +5,24 @@
         android:id="@+id/select_device"
         android:title="@string/plus"
         android:icon="@drawable/ic_baseline_usb_24"
-        app:showAsAction="always"
+        android:showAsAction="ifRoom"
         />
     <item
         android:id="@+id/select_port"
         android:title="@string/choose_port"
         android:icon="@drawable/ic_baseline_import_export_24"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
     />
     <item
         android:id="@+id/change_color"
         android:title="@string/change_color"
         android:icon="@drawable/ic_baseline_palette_24"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         />
     <item
         android:id="@+id/switch_fullscreen"
         android:title="@string/set_fullscreen"
         android:icon="@drawable/ic_baseline_fullscreen_24"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         />
 </menu>
