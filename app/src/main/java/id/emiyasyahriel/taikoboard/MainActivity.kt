@@ -12,6 +12,7 @@ import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowInsets
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import java.util.*
@@ -213,7 +214,8 @@ class MainActivity : Activity() {
     private fun setFullscreen(isTrue:Boolean = true){
         if(isTrue){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(true)
+                window.insetsController?.hide(WindowInsets.Type.systemBars())
+                actionBar?.hide()
             }else{
                 @Suppress("DEPRECATION") // This for lower than SDK R
                 window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
@@ -226,7 +228,8 @@ class MainActivity : Activity() {
             Toast.makeText(this, getString(R.string.toast_entering_fullscreen), Toast.LENGTH_SHORT).show()
         }else{
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-                window.setDecorFitsSystemWindows(false)
+                window.insetsController?.show(WindowInsets.Type.systemBars())
+                actionBar?.show()
             }else{
                 @Suppress("DEPRECATION") // This for lower than SDK R
                 window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -234,6 +237,7 @@ class MainActivity : Activity() {
                         or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
             }
         }
+        isFullScreen = isTrue
     }
 
     private fun onBackPressedImpl() {
