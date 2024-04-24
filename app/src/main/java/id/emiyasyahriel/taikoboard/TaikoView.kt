@@ -1,5 +1,7 @@
 package id.emiyasyahriel.taikoboard
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -9,7 +11,7 @@ import kotlin.math.roundToInt
 
 class TaikoView : View {
 
-    var buttonList : ArrayList<Boolean> = arrayListOf()
+    var buttonList : ArrayList<ButtonState> = arrayListOf()
     var buttonSize = 100
     var colors = getWhite(1)
     var rectBuffer = Rect(0,0,0,0)
@@ -17,7 +19,6 @@ class TaikoView : View {
     fun d(f:Float):Float = f * density
     fun d(f:Int):Int = (f * density).roundToInt()
     var rotate = false
-    var onKeyEvent : ArrayList<ITaikoViewReceiver> = arrayListOf()
 
     var colorOutline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
@@ -27,6 +28,8 @@ class TaikoView : View {
     var colorFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.BLACK
     }
+
+    private val _act get()= context as MainActivity
 
     constructor(context: Context):super(context){
         init()
@@ -39,13 +42,10 @@ class TaikoView : View {
         init()
     }
 
-    fun addEventListener(v:ITaikoViewReceiver){ onKeyEvent.add(v) }
-    fun removeEventListener(v:ITaikoViewReceiver){ onKeyEvent.remove(v) }
-
     private fun initStateList(){
         buttonList.clear()
         for(i in 0 .. AppState.keyCount){
-            buttonList.add(false)
+            buttonList.add(ButtonState(-1))
         }
     }
 
@@ -65,20 +65,22 @@ class TaikoView : View {
         initDisplaySize()
     }
 
-    private fun onTouchDown(pos: PointF){
+    private fun onTouchDown(pos: PointF, id:Int){
         val xPos = (pos.x / buttonSize).floorToInt()
-        if(xPos < buttonList.size){ buttonList[xPos] = true }
-        onKeyEvent.forEach { it.onDown(xPos) }
+        if(xPos < buttonList.size && buttonList[xPos].pointerId == -1)
+        {
+            buttonList[xPos].pointerId = id
+        }
+        _act.onDown(xPos)
     }
 
-    private fun onTouchUp(pos: PointF){
-        val xPos = (pos.x / buttonSize).floorToInt()
-        if(xPos < buttonList.size){ buttonList[xPos] = false }
-        onKeyEvent.forEach { it.onUp(xPos) }
-    }
-
-    override fun performClick(): Boolean {
-        return super.performClick()
+    private fun onTouchUp(pos: PointF, id:Int){
+        buttonList.forEachIndexed {i, it ->
+            if(it.pointerId == id){
+                it.pointerId = -1
+                _act.onUp(i)
+            }
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -88,25 +90,26 @@ class TaikoView : View {
         initDisplaySize()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         var retval = false
-        for(i in 0 until event.pointerCount){
-            var pId = event.getPointerId(i)
-            val pX = event.getX(i)
-            val pY = event.getY(i)
-            val pA = event.actionMasked
-            val pos = PointF(pX,pY)
-            when(pA){
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_HOVER_ENTER -> {
-                    onTouchDown(pos)
-                    retval = true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_HOVER_EXIT -> {
-                    onTouchUp(pos)
-                    retval = true
-                }
+        val pId = event.getPointerId(event.actionIndex)
+        val pIn = event.findPointerIndex(pId)
+        val pX = event.getX(pIn)
+        val pY = event.getY(pIn)
+        val pA = event.actionMasked
+        val pos = PointF(pX,pY)
+        when(pA){
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_HOVER_ENTER -> {
+                onTouchDown(pos, pId)
+                retval = true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_HOVER_EXIT -> {
+                onTouchUp(pos, pId)
+                retval = true
             }
         }
+        postInvalidate()
         return retval || performClick() || super.onTouchEvent(event)
     }
 
@@ -138,7 +141,7 @@ class TaikoView : View {
             canvas.drawRect(rectBuffer,colorFill)
 
             // Tapped down effect
-            if(buttonList[i]){
+            if(buttonList[i].pointerId != -1){
                 colorFill.alpha = 100
                 colorFill.color = Color.argb(100,0,0,0)
                 canvas.drawRect(rectBuffer, colorFill)
@@ -147,7 +150,6 @@ class TaikoView : View {
 
             canvas.drawRect(rectBuffer,colorOutline)
         }
-        postInvalidate()
     }
 }
 
