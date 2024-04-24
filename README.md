@@ -1,8 +1,6 @@
 # MIDITaikoBoard
 A simple MIDI-based Taiko controller for osu! in combination with MIDI to keyboard converter app
 
-**Warning**: This app still suffers multi-touch delay
-
 ## Requirements
 - Android device with OS version 6.0 or later and MIDI output capability
 - USB Data Cable (that can really transfer data.)
