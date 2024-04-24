@@ -4,4 +4,6 @@
     <string name="choose_port">Choose Port</string>
     <string name="change_color">Change Color</string>
     <string name="set_fullscreen">Fullscreen</string>
+    <string name="title_bar_device_name_field">Device : %1$s</string>
+    <string name="device_none">NONE</string>
 </resources>

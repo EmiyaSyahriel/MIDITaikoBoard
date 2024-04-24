@@ -1,7 +1,6 @@
 package id.emiyasyahriel.taikoboard
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -9,23 +8,24 @@ import android.view.MotionEvent
 import android.view.View
 import kotlin.math.roundToInt
 
+@Suppress("SameParameterValue")
 class TaikoView : View {
 
-    var buttonList : ArrayList<ButtonState> = arrayListOf()
-    var buttonSize = 100
-    var colors = getWhite(1)
-    var rectBuffer = Rect(0,0,0,0)
-    var density = 1f
-    fun d(f:Float):Float = f * density
+    private var buttonList : ArrayList<ButtonState> = arrayListOf()
+    private var buttonSize = 100
+    private var colors = getWhite(1)
+    private var rectBuffer = Rect(0,0,0,0)
+    private var density = 1f
+    private fun d(f:Float):Float = f * density
     fun d(f:Int):Int = (f * density).roundToInt()
-    var rotate = false
+    private var rotate = false
 
-    var colorOutline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private var colorOutline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         style = Paint.Style.STROKE
         strokeWidth = 50f
     }
-    var colorFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private var colorFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.BLACK
     }
 
@@ -74,7 +74,7 @@ class TaikoView : View {
         _act.onDown(xPos)
     }
 
-    private fun onTouchUp(pos: PointF, id:Int){
+    private fun onTouchUp(id:Int){
         buttonList.forEachIndexed {i, it ->
             if(it.pointerId == id){
                 it.pointerId = -1
@@ -105,7 +105,7 @@ class TaikoView : View {
                 retval = true
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_HOVER_EXIT -> {
-                onTouchUp(pos, pId)
+                onTouchUp(pId)
                 retval = true
             }
         }

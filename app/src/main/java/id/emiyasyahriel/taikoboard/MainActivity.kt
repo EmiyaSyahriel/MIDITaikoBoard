@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.midi.*
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,29 +19,36 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
 
 class MainActivity : Activity() {
-    lateinit var midiManager : MidiManager
-    var devices = ArrayList<MidiDeviceInfo>()
-    var selectedDeviceIdx = -1
-    var activeDevice: MidiDevice? = null
-    var activePort: MidiInputPort? = null
-    var isFullScreen = false
-    lateinit var taiko : TaikoView
+    private lateinit var midiManager : MidiManager
+    private var devices = ArrayList<MidiDeviceInfo>()
+    private var selectedDeviceIdx = -1
+    private var activeDevice: MidiDevice? = null
+    private var activePort: MidiInputPort? = null
+    private var isFullScreen = false
+    private lateinit var taiko : TaikoView
     private var timer = Timer("MIDI Queue")
 
     private data class Queue(val pos:Int, val up:Boolean)
     private val queue = arrayListOf<Queue>()
 
+    private fun setDeviceName(str:String){
+        actionBar?.subtitle = getString(R.string.title_bar_device_name_field, str)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         taiko = TaikoView(this)
         setContentView(taiko)
-        actionBar?.subtitle = "Device : NONE"
+        setDeviceName(getString(R.string.device_none))
 
         if(!packageManager.hasSystemFeature(PackageManager.FEATURE_MIDI)) displayUnsupportedAlert()
 
         midiManager = getSystemService(Context.MIDI_SERVICE) as MidiManager
-        midiManager.registerDeviceCallback( MidiCallbacks(this), Handler() )
         addConnectedDevices()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.unregisterOnBackInvokedCallback { onBackPressedImpl() }
+        }
 
         timer.scheduleAtFixedRate( timerTask {
             synchronized(queue){
@@ -65,15 +73,23 @@ class MainActivity : Activity() {
     }
 
     private fun addConnectedDevices(){
-        midiManager.devices.forEach { devices.add(it) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val tDevice = midiManager.getDevicesForTransport(MidiManager.TRANSPORT_MIDI_BYTE_STREAM)
+            this.devices.addAll(tDevice)
+            midiManager.registerDeviceCallback(
+                MidiManager.TRANSPORT_MIDI_BYTE_STREAM,
+                mainExecutor,
+                MidiCallbacks(this)
+            )
+        }else @Suppress("DEPRECATION") {
+            midiManager.registerDeviceCallback( MidiCallbacks(this), Handler() )
+            devices.addAll(midiManager.devices)
+        }
         Toast.makeText(this, "Found ${devices.size} MIDI devices.", Toast.LENGTH_SHORT).show()
     }
 
-    inner class MidiCallbacks(context: Context) : MidiManager.DeviceCallback(){
-        lateinit var context : Context
-        init {
-            this.context = context
-        }
+    inner class MidiCallbacks(private val context: Context) : MidiManager.DeviceCallback(){
+
         override fun onDeviceAdded(device: MidiDeviceInfo?) {
             super.onDeviceAdded(device)
             if( device!= null) devices.add(device)
@@ -84,6 +100,10 @@ class MainActivity : Activity() {
             super.onDeviceRemoved(device)
             if( device!= null) devices.remove(device)
             Toast.makeText(context, "A MIDI device disconnected", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onDeviceStatusChanged(status: MidiDeviceStatus?) {
+            super.onDeviceStatusChanged(status)
         }
     }
 
@@ -107,18 +127,21 @@ class MainActivity : Activity() {
         when(item.itemId){
             R.id.select_port -> {
                 showPortSelection()
+                retval = true
             }
             R.id.select_device -> {
                 showDeviceSelection()
+                retval = true
             }
             R.id.change_color -> {
-
+                retval = true
             }
             R.id.switch_fullscreen -> {
                 setFullscreen(true)
+                retval = true
             }
         }
-        return super.onOptionsItemSelected(item)
+        return retval || super.onOptionsItemSelected(item)
     }
 
     private fun setActiveMidiDevice(md:MidiDevice){
@@ -149,11 +172,10 @@ class MainActivity : Activity() {
 
         dialog.setNegativeButton("Cancel") { d, _ -> d.cancel() }
         dialog.setAdapter(arrayAdapter) { d, i ->
-            val deviceName = arrayAdapter.getItem(i)
             selectedDeviceIdx = i
             midiManager.openDevice(
                 devices[i],
-                MidiManager.OnDeviceOpenedListener { setActiveMidiDevice(it) } ,
+                { setActiveMidiDevice(it) },
                 Handler(Looper.getMainLooper()))
             d.dismiss()
         }
@@ -182,26 +204,42 @@ class MainActivity : Activity() {
 
     private fun setFullscreen(isTrue:Boolean = true){
         if(isTrue){
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(true)
+            }else{
+                @Suppress("DEPRECATION") // This for lower than SDK R
+                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN)
+            }
             Toast.makeText(this, "Press back to return to normal view.", Toast.LENGTH_SHORT).show()
         }else{
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+                window.setDecorFitsSystemWindows(false)
+            }else{
+                @Suppress("DEPRECATION") // This for lower than SDK R
+                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+            }
         }
     }
 
-    override fun onBackPressed() {
+    private fun onBackPressedImpl() {
         if(isFullScreen){
             setFullscreen(false)
         }else{
-            super.onBackPressed()
+            finish()
         }
+    }
+
+    // This should be fine
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onBackPressed() {
+        onBackPressedImpl()
     }
 
     fun onDown(pos: Int) {
