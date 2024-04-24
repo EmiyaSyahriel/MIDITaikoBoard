@@ -6,4 +6,14 @@
     <string name="set_fullscreen">Fullscreen</string>
     <string name="title_bar_device_name_field">Device : %1$s</string>
     <string name="device_none">NONE</string>
+    <string name="toast_midi_device_found_total">Found %1$d MIDI devices.</string>
+    <string name="midi_device_unknown_name">Unknown MIDI Device</string>
+    <string name="midi_device_unknown_manufacturer">Unknown MIDI Manufacturer</string>
+    <string name="toast_device_change_info">%1$s has opened.</string>
+    <string name="title_set_midi_device">Select MIDI Device.</string>
+    <string name="title_set_midi_device_port">Select MIDI Output Port.</string>
+    <string name="alert_no_midi_device_active">No MIDI device is active. Please select one MIDI device using the USB icon.</string>
+    <string name="toast_entering_fullscreen">Press back to return to normal view.</string>
+    <string name="toast_device_connected">New MIDI device connected</string>
+    <string name="toast_device_disconnected">A MIDI device disconnected</string>
 </resources>

@@ -85,7 +85,8 @@ class MainActivity : Activity() {
             midiManager.registerDeviceCallback( MidiCallbacks(this), Handler() )
             devices.addAll(midiManager.devices)
         }
-        Toast.makeText(this, "Found ${devices.size} MIDI devices.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this,
+            getString(R.string.toast_midi_device_found_total, devices.size), Toast.LENGTH_SHORT).show()
     }
 
     inner class MidiCallbacks(private val context: Context) : MidiManager.DeviceCallback(){
@@ -93,13 +94,14 @@ class MainActivity : Activity() {
         override fun onDeviceAdded(device: MidiDeviceInfo?) {
             super.onDeviceAdded(device)
             if( device!= null) devices.add(device)
-            Toast.makeText(context, "New MIDI device connected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, getString(R.string.toast_device_connected), Toast.LENGTH_SHORT).show()
         }
 
         override fun onDeviceRemoved(device: MidiDeviceInfo?) {
             super.onDeviceRemoved(device)
             if( device!= null) devices.remove(device)
-            Toast.makeText(context, "A MIDI device disconnected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,
+                getString(R.string.toast_device_disconnected), Toast.LENGTH_SHORT).show()
         }
 
         override fun onDeviceStatusChanged(status: MidiDeviceStatus?) {
@@ -147,10 +149,15 @@ class MainActivity : Activity() {
     private fun setActiveMidiDevice(md:MidiDevice){
         activeDevice?.close()
         activeDevice = md
-        val midiName = md.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME, "Unknown MIDI Device")
-        val midiManufacture = md.info.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER, "Unknown MIDI Manufacturer")
-        actionBar?.subtitle = "Device : $midiName - $midiManufacture"
-        Toast.makeText(this, "$midiName has opened.", Toast.LENGTH_SHORT).show()
+        val midiName = md.info.properties.getString(MidiDeviceInfo.PROPERTY_NAME,
+            getString(R.string.midi_device_unknown_name))
+        val midiManufacture = md.info.properties.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER,
+            getString(
+                R.string.midi_device_unknown_manufacturer
+            ))
+        setDeviceName("$midiName - $midiManufacture")
+        Toast.makeText(this,
+            getString(R.string.toast_device_change_info, midiName), Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
@@ -162,15 +169,16 @@ class MainActivity : Activity() {
 
     private fun showDeviceSelection(){
         val dialog = AlertDialog.Builder(this)
-        dialog.setTitle("Select MIDI Device.")
+        dialog.setTitle(R.string.title_set_midi_device)
 
         val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.select_dialog_singlechoice)
         devices.forEach {
-            val itemName = it.properties.getString(MidiDeviceInfo.PROPERTY_NAME, "Unknown MIDI Device.")
+            val itemName = it.properties.getString(MidiDeviceInfo.PROPERTY_NAME,
+                getString(R.string.midi_device_unknown_name))
             arrayAdapter.add(itemName)
         }
 
-        dialog.setNegativeButton("Cancel") { d, _ -> d.cancel() }
+        dialog.setNegativeButton(android.R.string.cancel) { d, _ -> d.cancel() }
         dialog.setAdapter(arrayAdapter) { d, i ->
             selectedDeviceIdx = i
             midiManager.openDevice(
@@ -186,10 +194,10 @@ class MainActivity : Activity() {
     private fun showPortSelection(){
         if(activeDevice != null){
             val dialog = AlertDialog.Builder(this)
-            dialog.setTitle("Select MIDI Output Port.")
+            dialog.setTitle(getString(R.string.title_set_midi_device_port))
             val arrayAdapter = ArrayAdapter<Int>(this, android.R.layout.select_dialog_singlechoice)
             for(i in 0 until activeDevice!!.info.inputPortCount){ arrayAdapter.add(i) }
-            dialog.setNegativeButton("Cancel") { d, _ -> d.cancel() }
+            dialog.setNegativeButton(android.R.string.cancel) { d, _ -> d.cancel() }
             dialog.setAdapter(arrayAdapter){d,i->
                 activePort?.flush()
                 activePort?.close()
@@ -198,7 +206,7 @@ class MainActivity : Activity() {
             }
             dialog.show()
         }else{
-            Toast.makeText(this, "No MIDI device is active. Please select one MIDI device using the USB icon.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.alert_no_midi_device_active), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -215,7 +223,7 @@ class MainActivity : Activity() {
                         or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         or View.SYSTEM_UI_FLAG_FULLSCREEN)
             }
-            Toast.makeText(this, "Press back to return to normal view.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.toast_entering_fullscreen), Toast.LENGTH_SHORT).show()
         }else{
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
                 window.setDecorFitsSystemWindows(false)
