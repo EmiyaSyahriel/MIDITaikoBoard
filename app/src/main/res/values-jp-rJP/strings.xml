@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">MIDI太鼓ボード</string>
+    <string name="plus">+</string>
+    <string name="choose_port">ポートを選び</string>
+    <string name="change_color">カラーをチェンジ</string>
+    <string name="set_fullscreen">フルスクリーン</string>
+    <string name="title_bar_device_name_field">デバイス : %1$s</string>
+    <string name="device_none">なし</string>
+    <string name="toast_midi_device_found_total">5 つの MIDI デバイスが見つかりました</string>
+    <string name="midi_device_unknown_name">デバイスネーム</string>
+    <string name="midi_device_unknown_manufacturer">デバイスブランド</string>
+    <string name="toast_device_change_info">%1$s は開けました</string>
+    <string name="title_set_midi_device">MIDIデバイスを選んでください</string>
+    <string name="title_set_midi_device_port">出力ポートを選びください</string>
+    <string name="alert_no_midi_device_active">アクティブMIDIデバイスはなしです。USBアイコンのボタンをタップしてMIDIデバイスを選んでください。</string>
+    <string name="toast_entering_fullscreen">戻るボタン／ジェスチャーを推すならノーマルモード戻ります</string>
+    <string name="toast_device_connected">新しいMIDIデバイスが接続されていました</string>
+    <string name="toast_device_disconnected">MIDIデバイスが接続されていました</string>
+</resources>
