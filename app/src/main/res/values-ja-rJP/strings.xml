@@ -6,7 +6,7 @@
     <string name="set_fullscreen">フルスクリーン</string>
     <string name="title_bar_device_name_field">デバイス : %1$s</string>
     <string name="device_none">なし</string>
-    <string name="toast_midi_device_found_total">5 つの MIDI デバイスが見つかりました</string>
+    <string name="toast_midi_device_found_total">%1$d つの MIDI デバイスが見つかりました</string>
     <string name="midi_device_unknown_name">デバイスネーム</string>
     <string name="midi_device_unknown_manufacturer">デバイスブランド</string>
     <string name="toast_device_change_info">%1$s は開けました</string>
