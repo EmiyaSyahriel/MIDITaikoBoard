@@ -52,23 +52,23 @@ class MainActivity : Activity() {
         }
 
         timer.scheduleAtFixedRate( timerTask {
-            synchronized(queue){
-                if(queue.size <= 0) return@timerTask
-                val buffer = ByteArray(3 * queue.size)
-                var numBytes = 0
-                for(q in queue){
-                    if(activePort != null){
+            if(activePort != null){
+                synchronized(queue){
+                    if(queue.size <= 0) return@timerTask
+                    val buffer = ByteArray(3 * queue.size)
+                    var numBytes = 0
+                    for(q in queue){
                         val flag = if(q.up) 0x80 else 0x90
                         buffer[numBytes++] = (flag).toByte()
                         buffer[numBytes++] = (50 + q.pos).toByte()
                         buffer[numBytes++] = (127).toByte()
                     }
+                    // 5ms timestamp
+                    val nPms = 1000000L
+                    val timeStamp = System.nanoTime() + (5 * nPms)
+                    activePort?.send(buffer, 0, numBytes, timeStamp)
+                    queue.clear()
                 }
-                // 5ms timestamp
-                val nPms = 1000000L
-                val timeStamp = System.nanoTime() + (5 * nPms)
-                activePort?.send(buffer, 0, numBytes, timeStamp)
-                queue.clear()
             }
         }, 0, 5)
     }
@@ -255,14 +255,18 @@ class MainActivity : Activity() {
     }
 
     fun onDown(pos: Int) {
-        synchronized(queue){
-            queue.add(Queue(pos, false))
+        if(activePort != null){
+            synchronized(queue){
+                queue.add(Queue(pos, false))
+            }
         }
     }
 
     fun onUp(pos: Int) {
-        synchronized(queue){
-            queue.add(Queue(pos, true))
+        if(activePort != null) {
+            synchronized(queue) {
+                queue.add(Queue(pos, true))
+            }
         }
     }
 }
